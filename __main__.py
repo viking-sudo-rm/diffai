@@ -206,6 +206,7 @@ parser.add_argument('--test-size', type=int, default=2000, help='number of examp
 
 parser.add_argument('-r', '--regularize', type=float, default=None, help='use regularization')
 
+parser.add_argument("-k", "--n_splits", type=int, default=0, help="log(# queries)")
 
 args = parser.parse_args()
 
@@ -335,13 +336,26 @@ def test(models, epoch, f = None):
                 timer = Timer(shouldPrint = False)
                 with timer:
                     def calcData(data, target):
-                        box = stat.domain.box(data, w = m.model.w, model=m.model, untargeted = True, target=target).to_dtype()
+                        # box = stat.domain.box(data, w = m.model.w, model=m.model, untargeted = True, target=target).to_dtype()
+                        _, d1, d2, d3 = data.shape
+                        n_splits = args.n_splits  # Number of regions exponential in this.
+                        dims = [(..., random.randint(0, d1 - 1), random.randint(0, d2 - 1), random.randint(0, d3 - 1)) for _ in range(n_splits)]
+                        # dims = [(..., 0, 1, 3)]  # Non-empty syntax.
+                        # dims = []  # Baseline.
+                        boxes = stat.domain.splitBoxes(data, m.model.w, dims, model=m.model, untargeted = True, target=target)
                         with torch.no_grad():
-                            bs = m.model(box)
-                            org = m.model(data).vanillaTensorPart().max(1,keepdim=True)[1]
-                            stat.width += bs.diameter().sum().item() # sum up batch loss
-                            stat.proved += bs.isSafe(org).sum().item()
-                            stat.safe += bs.isSafe(target).sum().item()
+                            proved = torch.ones_like(target)
+                            safe = torch.ones_like(target)
+                            for box in boxes:
+                                box = box.to_dtype()
+                                bs = m.model(box)
+                                org = m.model(data).vanillaTensorPart().max(1,keepdim=True)[1]
+                                # Unclear what this metric means anymore lol.
+                                stat.width += bs.diameter().sum().item() # sum up batch loss
+                                proved *= bs.isSafe(org)
+                                safe *= bs.isSafe(target)
+                            stat.proved += proved.sum().item()
+                            stat.safe += safe.sum().item()
                             # stat.max_eps += 0 # TODO: calculate max_eps
 
                     if m.model.net.neuronCount() < 5000 or stat.domain.__class__ in SYMETRIC_DOMAINS:

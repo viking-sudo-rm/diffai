@@ -433,7 +433,25 @@ class HBox(object):
 
         return ls / (width_weight + tot_weight)
 
+class WillBox:
+    def __init__(self, l, r):
+        self.l = l
+        self.r = r
+    
+    def split(self, dim):
+        lbox = WillBox(self.l.clone(), self.r.clone())
+        rbox = WillBox(self.l.clone(), self.r.clone())
+        avg = (self.l[dim] - self.r[dim]) / 2
+        lbox.r[dim] = avg
+        rbox.l[dim] = avg
+        return lbox, rbox
+
 class Box(HBox):
+
+    @staticmethod
+    def flatten(t):
+        return [item for sublist in t for item in sublist]
+
     def __str__(self):
         return "Box(%s)" % ("" if self.w is None else "w="+str(self.w))
 
@@ -448,6 +466,13 @@ class Box(HBox):
         radius = self.w.getVal(c = w, **kargs)
         return self.domain(original, h.ones(original.size()) * radius, None).checkSizes()
     
+    def splitBoxes(self, original, w, dims, **kargs):
+        radius = self.w.getVal(c = w, **kargs)
+        boxes = [WillBox(original - radius, original + radius)]
+        for dim in dims:
+            boxes = self.flatten([box.split(dim) for box in boxes])
+        return [self.boxBetween(box.l, box.r, **kargs) for box in boxes]
+
     def line(self, o1, o2, **kargs):
         w = self.w.getVal(c = 0, **kargs)
         return self.domain((o1 + o2) / 2, ((o2 - o1) / 2).abs() + h.ones(o2.size()) * w, None).checkSizes()
