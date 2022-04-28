@@ -441,7 +441,7 @@ class WillBox:
     def split(self, dim):
         lbox = WillBox(self.l.clone(), self.r.clone())
         rbox = WillBox(self.l.clone(), self.r.clone())
-        avg = (self.l[dim] - self.r[dim]) / 2
+        avg = (self.l[dim] + self.r[dim]) / 2
         lbox.r[dim] = avg
         rbox.l[dim] = avg
         return lbox, rbox
@@ -471,7 +471,7 @@ class Box(HBox):
         boxes = [WillBox(original - radius, original + radius)]
         for dim in dims:
             boxes = self.flatten([box.split(dim) for box in boxes])
-        return [self.boxBetween(box.l, box.r, **kargs) for box in boxes]
+        return [self.domain((box.l + box.r) / 2, (box.r - box.l).abs() / 2, None).checkSizes() for box in boxes]
 
     def line(self, o1, o2, **kargs):
         w = self.w.getVal(c = 0, **kargs)
