@@ -209,6 +209,7 @@ parser.add_argument('--test-size', type=int, default=2000, help='number of examp
 parser.add_argument('-r', '--regularize', type=float, default=None, help='use regularization')
 
 parser.add_argument("-k", "--n_splits", type=int, default=0, help="log(# queries)")
+parser.add_argument("--save_suffix", type=str, default="")
 
 args = parser.parse_args()
 
@@ -382,10 +383,11 @@ def test(models, epoch, f = None):
         if args.use_schedule:
             m.model.lrschedule.step(1 - pr_corr)
         
-        if not os.path.exists("runs.json"):
+        runs_file = f"runs{args.save_suffix}.json"
+        if not os.path.exists(runs_file):
             runs = []
         else:
-            with open("runs.json", "r") as fp:
+            with open(runs_file, "r") as fp:
                 runs = json.load(fp)
 
         h.printBoth(('Test: {:12} trained with {:'+ str(largest_domain) +'} - Avg sec/ex {:1.12f}, Accuracy: {}/{} ({:3.1f}%)').format(
@@ -417,7 +419,7 @@ def test(models, epoch, f = None):
                 "correct_proved": pr_safe,
                 "time": stat.time,
             })
-            with open("runs.json", "w") as fp:
+            with open(runs_file, "w") as fp:
                 json.dump(runs, fp)
 
         prepedname = m.model.ty.name.replace(" ", "_").replace(",", "").replace("(", "_").replace(")", "_").replace("=", "_")

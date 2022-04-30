@@ -12,8 +12,8 @@ with open("runs.json", "r") as fp:
 
 print("# runs", len(runs))
 
-max_k = 6
-runs_by_n_splits = {k: [run for run in runs if run["n_splits"] == k] for k in range(max_k)}
+max_k = max(run["n_splits"] for run in runs)
+runs_by_n_splits = {k: [run for run in runs if run["n_splits"] == k] for k in range(max_k + 1)}
 
 # Plot loss as function of k.
 ks, values = zip(*[(k, [run["max_loss"] for run in runs]) for k, runs in runs_by_n_splits.items()])
