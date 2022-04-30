@@ -16,6 +16,8 @@ from torch.utils.data import Dataset
 import decimal
 import torch.onnx
 
+from collections import defaultdict
+import json
 
 import inspect
 from inspect import getargspec
@@ -310,6 +312,8 @@ def test(models, epoch, f = None):
                     self.safe = 0
                     self.proved = 0
                     self.time = 0
+                    self.loss_by_box = defaultdict(float)
+                    self.count = 0
             self.domains = [ Stat(h.parseValues(d, goals), h.catStrs(d)) for d in args.test_domain ]
     model_stats = [ MStat(m) for m in models ]
         
@@ -346,7 +350,9 @@ def test(models, epoch, f = None):
                         with torch.no_grad():
                             proved = torch.ones_like(target)
                             safe = torch.ones_like(target)
-                            for box in boxes:
+                            loss = 0.
+                            count = 0
+                            for idx, box in enumerate(boxes):
                                 box = box.to_dtype()
                                 bs = m.model(box)
                                 org = m.model(data).vanillaTensorPart().max(1,keepdim=True)[1]
@@ -354,6 +360,8 @@ def test(models, epoch, f = None):
                                 stat.width += bs.diameter().sum().item() # sum up batch loss
                                 proved *= bs.isSafe(org)
                                 safe *= bs.isSafe(target)
+                                stat.loss_by_box[idx] = bs.loss(target).sum().item()
+                                stat.count += target.numel()
                             stat.proved += proved.sum().item()
                             stat.safe += safe.sum().item()
                             # stat.max_eps += 0 # TODO: calculate max_eps
@@ -374,6 +382,12 @@ def test(models, epoch, f = None):
         if args.use_schedule:
             m.model.lrschedule.step(1 - pr_corr)
         
+        if not os.path.exists("runs.json"):
+            runs = []
+        else:
+            with open("runs.json", "r") as fp:
+                runs = json.load(fp)
+
         h.printBoth(('Test: {:12} trained with {:'+ str(largest_domain) +'} - Avg sec/ex {:1.12f}, Accuracy: {}/{} ({:3.1f}%)').format(
             m.model.name, m.model.ty.name,
             m.model.speed,
@@ -392,6 +406,20 @@ def test(models, epoch, f = None):
                 "AvgMaxEps: {:1.10f} ".format(stat.max_eps / l) if stat.max_eps is not None else "",
                 stat.time), f = f)
             model_stat_rec += "{}_{:1.3f}_{:1.3f}_{:1.3f}__".format(stat.name, pr_proved, pr_safe, pr_corr_given_proved)
+
+            # FIXME: Won't work for multiple domains.. that's ok.
+            max_loss = max(stat.loss_by_box.values()) / stat.count
+            print(f"Max loss: {max_loss:.4f}")
+            runs.append({
+                "n_splits": args.n_splits,
+                "max_loss": max_loss,
+                "proved": pr_proved,
+                "correct_proved": pr_safe,
+                "time": stat.time,
+            })
+            with open("runs.json", "w") as fp:
+                json.dump(runs, fp)
+
         prepedname = m.model.ty.name.replace(" ", "_").replace(",", "").replace("(", "_").replace(")", "_").replace("=", "_")
         net_file = os.path.join(out_dir, m.model.name +"__" +prepedname + "_checkpoint_"+str(epoch)+"_with_{:1.3f}".format(pr_corr))
 
