@@ -313,7 +313,7 @@ def test(models, epoch, f = None):
                     self.safe = 0
                     self.proved = 0
                     self.time = 0
-                    self.loss_by_box = defaultdict(float)
+                    self.max_loss = 0.
                     self.count = 0
             self.domains = [ Stat(h.parseValues(d, goals), h.catStrs(d)) for d in args.test_domain ]
     model_stats = [ MStat(m) for m in models ]
@@ -351,6 +351,7 @@ def test(models, epoch, f = None):
                         with torch.no_grad():
                             proved = torch.ones_like(target)
                             safe = torch.ones_like(target)
+                            max_loss = torch.zeros_like(target, dtype=torch.float)
                             loss = 0.
                             count = 0
                             for idx, box in enumerate(boxes):
@@ -361,10 +362,12 @@ def test(models, epoch, f = None):
                                 stat.width += bs.diameter().sum().item() # sum up batch loss
                                 proved *= bs.isSafe(org)
                                 safe *= bs.isSafe(target)
-                                stat.loss_by_box[idx] = bs.loss(target).sum().item()
+                                # This version doesn't have torch.maximum, so we need to use torch.max confusingly.
+                                max_loss = torch.max(max_loss, bs.loss(target))
                                 stat.count += target.numel()
                             stat.proved += proved.sum().item()
                             stat.safe += safe.sum().item()
+                            stat.max_loss += max_loss.sum().item()
                             # stat.max_eps += 0 # TODO: calculate max_eps
 
                     if m.model.net.neuronCount() < 5000 or stat.domain.__class__ in SYMETRIC_DOMAINS:
@@ -410,7 +413,7 @@ def test(models, epoch, f = None):
             model_stat_rec += "{}_{:1.3f}_{:1.3f}_{:1.3f}__".format(stat.name, pr_proved, pr_safe, pr_corr_given_proved)
 
             # FIXME: Won't work for multiple domains.. that's ok.
-            max_loss = max(stat.loss_by_box.values()) / stat.count
+            max_loss = stat.max_loss / stat.count
             print(f"Max loss: {max_loss:.4f}")
             runs.append({
                 "n_splits": args.n_splits,
