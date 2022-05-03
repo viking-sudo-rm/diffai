@@ -1,4 +1,4 @@
-radius=".01"
+# radius=".01"
 
 for trial in 0 1 2 3 4
 do
