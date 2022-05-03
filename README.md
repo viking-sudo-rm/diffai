@@ -32,11 +32,13 @@ conda activate diffai
 
 ## Certification
 
-First, download the `convSmall` trained model from DiffAI. Then you can run:
+First, download the (`convSmall`)[https://www.dropbox.com/sh/66obogmvih79e3k/AACfzqaT7kwf44Ksh1bVhUb1a/basic_nets/CIFAR10/width_2_255/ConvSmall__LinMix_a_IFGSM_w_Lin_00.0110020__k_3__b_InSamp_Lin_0115050__w_Lin_00.0115050___bw_Lin_00.515050___checkpoint_301_with_0.561.pynet?dl=0] trained model from the original DIFFAI repo.
 
 ```shell
 python . -d Point --epochs 1 --dont-write --test-freq 1 -t Box(0.01) --test out/convSmall.pynet -D=CIFAR10
 ```
+
+Links to other trained models can also be found in README-ORIGINAL.md, and command line arguments can be modified appropriately to work with them. You can also of course slot in your own trained models.
 
 All certification experiments can be replicated by running trials.sh for `radius=.01` and `radius=.02`:
 
