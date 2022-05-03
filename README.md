@@ -2,9 +2,9 @@
 
 *Authors: Zachary DeStefano, Ildebrando Magnani, William Merrill*
 
-Final projects for [Foundations of Machine Learning](https://cs.nyu.edu/~mohri/mlsp22/) at NYU with Professor Mehryar Mohri.
+Final project for [Foundations of Machine Learning](https://cs.nyu.edu/~mohri/mlsp22/) at NYU with Professor Mehryar Mohri.
 
-This codebase is based on a clone of DiffAI, a toolkit for applying abstract interpretation to neural networks.
+This codebase is based on a clone of [DiffAI](https://github.com/eth-sri/diffai), a toolkit for applying abstract interpretation to neural networks.
 
 We provide documentation of installation and commands used to run experiments.
 
