@@ -10,11 +10,9 @@ We provide documentation of installation and commands used to run experiments.
 
 ## Installation
 
-```shell
-# Clone repo
-git clone https://github.com/eth-sri/diffai
-cd diffai
+After cloning this repository, run the following from the `diffai/` directory:
 
+```shell
 # Create conda environment. Need to install conda or miniconda first.
 conda create -n diffai python=3.6
 conda activate diffai # Will need to do this every time you want to use this version of Python.
@@ -24,7 +22,7 @@ conda install pytorch=0.4.1 torchvision cuda90 -c pytorch
 conda install torchvision=0.2.1 cuda90
 
 # Install the rest of the dependencies with pip.
-pip install numpy six future forbiddenfruit
+pip install numpy six future forbiddenfruit matplotlib
 ```
 
 Every time you run code in the repo, you should:
