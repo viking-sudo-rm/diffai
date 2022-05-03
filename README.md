@@ -72,3 +72,5 @@ python . -d="LinMix(a=Point(), b=Box(w=Lin(0,0.031373,100,0)), bw=Lin(0,1,100,0)
 python . -d="LinMix(a=Point(), b=Box(w=Lin(0,0.047059,100,0)), bw=Lin(0,1,100,0))" --batch-size 50 --epochs 101 --dont-write --test-freq 5 -t Box --width 0.031373 -D=CIFAR10 -k=4 -n=ConvBig | tee mylog/lb-12-255.txt
 python . -d="LinMix(a=Point(), b=Box(w=Lin(0,0.062745,100,0)), bw=Lin(0,1,100,0))" --batch-size 50 --epochs 101 --dont-write --test-freq 5 -t Box --width 0.031373 -D=CIFAR10 -k=4 -n=ConvBig | tee mylog/lb-16-255.txt
 ```
+
+You can then use clean.py to extract well-formatted data from the generated logs.
