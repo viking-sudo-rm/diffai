@@ -8,7 +8,7 @@ This codebase is based on a clone of DiffAI, a toolkit for applying abstract int
 
 We provide documentation of installation and commands used to run experiments.
 
-## Installation
+## Environment Setup
 
 After cloning this repository, run the following from the `diffai/` directory:
 
